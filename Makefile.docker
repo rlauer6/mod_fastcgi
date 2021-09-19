@@ -1,0 +1,46 @@
+# -*- mode: makefile; -*-
+# Makefile for building mod_fastcgi in a Docker container
+
+# note that mod_fastcgi.so timestamp is earlier than
+# docker-container-id so we touch target
+mod_fastcgi.so: docker-container-id
+	CONTAINER_ID=$$(cat $<); \
+	docker cp $$CONTAINER_ID:/usr/local/apache2/modules/mod_fastcgi.so $@
+	touch $@
+
+Dockerfile:
+	@APACHE_VERSION=$${APACHE_VERSION:-2.4.48}; \
+	DOCKER_IMAGE=$${DOCKER_IMAGE:-amazonlinux:2}; \
+	APACHE_DOWNLOAD_URL=https://dlcdn.apache.org//httpd/httpd-$${APACHE_VERSION}.tar.gz; \
+	/bin/echo -e \
+FROM $$DOCKER_IMAGE \\n\
+RUN yum update --security -y \\n\
+RUN yum install -y httpd24-devel gcc wget git make tar apr apr-util-devel apr-devel pcre-devel  \\n\
+RUN wget $$APACHE_DOWNLOAD_URL \\n\
+RUN tar xfvz httpd-$$APACHE_VERSION.tar.gz \\n\
+RUN cd httpd-$$APACHE_VERSION \&\& ./configure \&\& make \&\& make install \\n\
+RUN git clone https://github.com/FastCGI-Archives/mod_fastcgi.git \\n\
+RUN cd mod_fastcgi \&\& cp Makefile.AP2 Makefile \&\& make \&\& make install \\n\
+RUN ls /usr/local/apache2/modules/mod_fastcgi.so >>$@
+
+docker-image: Dockerfile
+	docker build --no-cache -f $< . -t mod_fastcgi:latest | tee $@
+
+docker-container-id: docker-image
+	docker run -dit mod_fastcgi:latest >$@
+
+all:
+
+CLEANFILES = \
+    Dockerfile \
+    docker-image \
+    docker-container-id \
+    mod_fastcgi.so
+
+clean:
+	if test -e docker-container-id; then \
+	  docker rm -f $$(cat docker-container-id) || true; \
+	fi
+	docker rmi -f mod_fastcgi:latest || true
+	rm -rf $(CLEANFILES) || true
+

@@ -19,6 +19,9 @@ file [INSTALL](INSTALL.md).
 For information on **installing mod_fastcgi with Apache 2.x**, see the
 file [INSTALL.AP2](INSTALL.AP2.md).
 
+For information on **building mod_fastcgi.so** using Docker, see the
+file [DOCKER_BUILD](DOCKER_BUILD.md).
+
 For information on **configuring an installed instance of mod_fastcgi**,
 see the file [CONFIG](CONFIG.md). 
 
@@ -34,3 +37,4 @@ For history the old mailing list are at:
 - http://blog.gmane.org/gmane.comp.web.fastcgi.devel
 - http://git.net/ml/web.fastcgi.devel
 - https://web.archive.org/web/20130914200635/http://mailman.chelsea.net/mailman/listinfo/fastcgi-developers
+

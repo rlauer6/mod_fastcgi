@@ -13,4 +13,7 @@ Makefile
 .cdtproject
 Debug
 Release
+Dockerfile
+docker-container-id
+docker-image
 
