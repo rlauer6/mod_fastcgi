@@ -6,8 +6,10 @@
 mod_fastcgi.so: docker-container-id
 	CONTAINER_ID=$$(cat $<); \
 	docker cp $$CONTAINER_ID:/usr/local/apache2/modules/mod_fastcgi.so $@
+	docker stop mod_fastcgi_build && docker rm mod_fastcgi_build || true
 	touch $@
 
+# create the Dockerfile - note escaping of bash symbols &, ; in heredoc(sorta)
 Dockerfile:
 	@APACHE_VERSION=$${APACHE_VERSION:-2.4.48}; \
 	DOCKER_IMAGE=$${DOCKER_IMAGE:-amazonlinux:2}; \
@@ -27,7 +29,7 @@ docker-image: Dockerfile
 	docker build --no-cache -f $< . -t mod_fastcgi:latest | tee $@
 
 docker-container-id: docker-image
-	docker run -dit mod_fastcgi:latest >$@
+	docker run -dit --name mod_fastcgi_build mod_fastcgi:latest >$@
 
 all:
 
@@ -39,7 +41,7 @@ CLEANFILES = \
 
 clean:
 	if test -e docker-container-id; then \
-	  docker rm -f $$(cat docker-container-id) || true; \
+	  docker stop $$(cat docker-container-id) && docker rm $$(cat docker-container-id) || true; \
 	fi
 	docker rmi -f mod_fastcgi:latest || true
 	rm -rf $(CLEANFILES) || true
